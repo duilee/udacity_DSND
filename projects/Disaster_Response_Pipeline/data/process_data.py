@@ -36,7 +36,7 @@ def clean_data(df):
     
     for column in categories:
     # set each value to be the last character of the string
-        categories[column] = categories[column].apply(lambda x : x[-1])
+        categories[column] = categories[column].str[-1]
 
         # convert column from string to numeric
         categories[column] = categories[column].apply(pd.to_numeric)
@@ -54,7 +54,7 @@ def save_data(df, database_filename):
     Save the clean dataset into an sqlite database
     """
     engine = create_engine('sqlite:///'+ database_filename)
-    df.to_sql('cleaned_messages', engine, index=False)  
+    df.to_sql('messages', engine, index=False)  
 
 
 def main():
