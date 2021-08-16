@@ -7,6 +7,26 @@ In the Project Workspace, you'll find a data set containing real messages that w
 
 This project includes a web app where an emergency worker can input a new message and get classification results in several categories. The web app will also display visualizations of the data.
 
+### Files in the repository
+#### 1. ETL Pipeline  
+In a Python script, data/process_data.py, exists a data cleaning pipeline that:
+- Loads the messages and categories datasets
+- Merges the two datasets
+- Cleans the data
+- Stores it in a SQLite database
+
+#### 2. ML Pipeline
+In a Python script, models/train_classifier.py, exists a machine learning pipeline that:
+- Loads data from the SQLite database
+- Splits the dataset into training and test sets
+- Builds a text processing and machine learning pipeline
+- Trains and tunes a model using GridSearchCV
+- Outputs results on the test set
+- Exports the final model as a pickle file
+
+#### 3. Flask Web App
+In app, I am providing the flask web app for you
+
 ### Instructions:
 1. Run the following commands in the project's root directory to set up your database and model.
 
