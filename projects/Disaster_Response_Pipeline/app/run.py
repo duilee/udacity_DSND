@@ -1,6 +1,7 @@
 import json
 import plotly
 import pandas as pd
+import numpy as np
 
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
@@ -11,8 +12,8 @@ from plotly.graph_objs import Bar
 from sklearn.externals import joblib
 from sqlalchemy import create_engine
 
-
 app = Flask(__name__)
+
 
 def tokenize(text):
     tokens = word_tokenize(text)
@@ -25,24 +26,31 @@ def tokenize(text):
 
     return clean_tokens
 
+
 # load data
-engine = create_engine('sqlite:///../data/YourDatabaseName.db')
-df = pd.read_sql_table('YourTableName', engine)
+engine = create_engine('sqlite:///../data/DisasterResponse.db')
+df = pd.read_sql_table('messages', engine)
 
 # load model
-model = joblib.load("../models/your_model_name.pkl")
+model = joblib.load("../models/classifier.pkl")
 
 
 # index webpage displays cool visuals and receives user input text for model
 @app.route('/')
 @app.route('/index')
 def index():
-    
     # extract data needed for visuals
     # TODO: Below is an example - modify to extract data for your own visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
-    
+
+    categories_agg = np.sum(df.iloc[:, 4:], axis=0)
+    categories = categories_agg.index.values
+    categories_counts = categories_agg.values
+
+    eng_messages = sum(df['message'] == df['original'])
+    non_eng_messages = len(df['message']) - eng_messages
+
     # create visuals
     # TODO: Below is an example - modify to create your own visuals
     graphs = [
@@ -64,12 +72,50 @@ def index():
                 }
             }
         }
+        ,
+        {
+            'data': [
+                Bar(
+                    x=categories,
+                    y=categories_counts
+                )
+            ],
+
+            'layout': {
+                'title': 'Counts of messages for each category',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Category"
+                }
+            }
+        }
+        ,
+        {
+            'data': [
+                Bar(
+                    x=['eng_messages', 'non_eng_messages'],
+                    y=[eng_messages, non_eng_messages]
+                )
+            ],
+
+            'layout': {
+                'title': 'Counts of english and non-enligh messages',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Eng or Non-Eng"
+                }
+            }
+        }
     ]
-    
+
     # encode plotly graphs in JSON
     ids = ["graph-{}".format(i) for i, _ in enumerate(graphs)]
     graphJSON = json.dumps(graphs, cls=plotly.utils.PlotlyJSONEncoder)
-    
+
     # render web page with plotly graphs
     return render_template('master.html', ids=ids, graphJSON=graphJSON)
 
@@ -78,7 +124,7 @@ def index():
 @app.route('/go')
 def go():
     # save user input in query
-    query = request.args.get('query', '') 
+    query = request.args.get('query', '')
 
     # use model to predict classification for query
     classification_labels = model.predict([query])[0]
