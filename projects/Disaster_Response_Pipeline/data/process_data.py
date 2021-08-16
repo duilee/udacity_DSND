@@ -6,19 +6,19 @@ from sqlalchemy import *
 def load_data(messages_filepath, categories_filepath):
     """
     Load datasets from message and categories filepath
-    
+
     And merge the messages and categories datasets using the common id
-    
+
     Returns: dataframe with messages and categories merged
     """
-    
+
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
-    
+
     df = pd.merge(messages, categories, on='id', how='left')
-    
+
     return df
-    
+
 
 def clean_data(df):
     """
@@ -26,35 +26,38 @@ def clean_data(df):
     Convert category values to just numbers 0 or 1.
     Replace categories column in df with new category columns
     Remove duplicates.
-    
+
     """
     categories = df['categories'].str.split(';', expand=True)
-    
+
     row = categories.iloc[0]
     category_colnames = row.apply(lambda x: x[:-2]).values
     categories.columns = category_colnames
-    
+
     for column in categories:
-    # set each value to be the last character of the string
+        # set each value to be the last character of the string
         categories[column] = categories[column].str[-1]
 
         # convert column from string to numeric
         categories[column] = categories[column].apply(pd.to_numeric)
-    
+
     # drop the original categories column from `df`
     df.drop(columns='categories', inplace=True)
-    
+
     df = pd.concat([df, categories], axis=1)
     df = df.drop_duplicates(keep='first')
-    
+
+    df['related'].replace(2, 1, inplace=True)
+
     return df
+
 
 def save_data(df, database_filename):
     """
     Save the clean dataset into an sqlite database
     """
-    engine = create_engine('sqlite:///'+ database_filename)
-    df.to_sql('messages', engine, index=False)  
+    engine = create_engine('sqlite:///' + database_filename)
+    df.to_sql('messages', engine, index=False)
 
 
 def main():
@@ -68,18 +71,18 @@ def main():
 
         print('Cleaning data...')
         df = clean_data(df)
-        
+
         print('Saving data...\n    DATABASE: {}'.format(database_filepath))
         save_data(df, database_filepath)
-        
+
         print('Cleaned data saved to database!')
-    
+
     else:
-        print('Please provide the filepaths of the messages and categories '\
-              'datasets as the first and second argument respectively, as '\
-              'well as the filepath of the database to save the cleaned data '\
-              'to as the third argument. \n\nExample: python process_data.py '\
-              'disaster_messages.csv disaster_categories.csv '\
+        print('Please provide the filepaths of the messages and categories ' \
+              'datasets as the first and second argument respectively, as ' \
+              'well as the filepath of the database to save the cleaned data ' \
+              'to as the third argument. \n\nExample: python process_data.py ' \
+              'disaster_messages.csv disaster_categories.csv ' \
               'DisasterResponse.db')
 
 
