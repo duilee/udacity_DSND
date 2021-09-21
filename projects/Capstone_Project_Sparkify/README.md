@@ -1,5 +1,7 @@
 # Project Overview
 
+Medium post can be found [here](https://duilee.medium.com/sparkify-project-predicting-user-churn-97cf1b1e2fdf)
+
 This project deals with mini subset of full 12GB log data for our fictional music streaming app, sparkify.
 The goal of the project is to predict churn for the user.
 
